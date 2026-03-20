@@ -7,9 +7,10 @@ const CORS_PROXIES = [
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
 ]
 
-// Finnhub requires an API key — user can set it in localStorage
-function getFinnhubKey(): string | null {
-  return localStorage.getItem('finnhub_api_key')
+const FINNHUB_DEFAULT_KEY = 'd6umno1r01qig5454jd0d6umno1r01qig5454jdg'
+
+function getFinnhubKey(): string {
+  return localStorage.getItem('finnhub_api_key') || FINNHUB_DEFAULT_KEY
 }
 
 interface YahooQuoteResult {
@@ -85,7 +86,6 @@ interface FinnhubQuote {
 
 async function fetchFromFinnhub(symbols: string[]): Promise<StockQuote[]> {
   const apiKey = getFinnhubKey()
-  if (!apiKey) throw new Error('No Finnhub API key configured')
 
   const quotes = await Promise.all(
     symbols.map(async (symbol) => {
