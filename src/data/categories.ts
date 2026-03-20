@@ -12,7 +12,14 @@ export const categories: StockCategory[] = [
     name: 'Defense',
     icon: '🛡️',
     color: '#ef4444',
-    tickers: ['LMT', 'RTX', 'NOC', 'GD', 'BA', 'LHX', 'HII', 'LDOS'],
+    tickers: ['LMT', 'RTX', 'NOC', 'GD', 'BA', 'LHX', 'HII', 'LDOS', 'KTOS', 'PLTR', 'BWXT', 'AXON', 'PSN'],
+  },
+  {
+    id: 'drones',
+    name: 'Drones',
+    icon: '🛩️',
+    color: '#64748b',
+    tickers: ['KTOS', 'AVAV', 'RKLB', 'IRDM', 'JOBY', 'ACHR', 'LUNR', 'RCAT', 'UMAC', 'DPRO'],
   },
   {
     id: 'big-tech',
