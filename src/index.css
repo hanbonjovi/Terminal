@@ -9,22 +9,23 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #030711;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #111;
+  background: #0a0e17;
 }
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 3px;
+  background: #1e293b;
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #334155;
 }
 
 /* Blinking cursor effect for loading */
@@ -36,11 +37,60 @@ body {
   animation: blink 1s infinite;
 }
 
-/* Glow effect for active category */
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.3); }
-  50% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.5); }
+/* Ticker tape scrolling animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
-.category-active {
-  animation: glow 2s ease-in-out infinite;
+
+.ticker-tape-container {
+  position: relative;
+}
+
+.ticker-tape-track {
+  animation: ticker-scroll 30s linear infinite;
+  width: fit-content;
+}
+
+.ticker-tape-container:hover .ticker-tape-track {
+  animation-play-state: paused;
+}
+
+/* Flash animation for price updates */
+@keyframes flash-green {
+  0% { background-color: rgba(34, 197, 94, 0.3); }
+  100% { background-color: transparent; }
+}
+@keyframes flash-red {
+  0% { background-color: rgba(239, 68, 68, 0.3); }
+  100% { background-color: transparent; }
+}
+.flash-positive {
+  animation: flash-green 1.5s ease-out;
+}
+.flash-negative {
+  animation: flash-red 1.5s ease-out;
+}
+
+/* Bloomberg-style market status pulse */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 2px currentColor; }
+  50% { box-shadow: 0 0 8px currentColor; }
+}
+
+/* Scan line effect (subtle) */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Selection styling */
+::selection {
+  background: rgba(245, 158, 11, 0.3);
+  color: white;
+}
+
+/* Table row highlight on hover */
+table tbody tr {
+  transition: background-color 0.1s ease;
 }
