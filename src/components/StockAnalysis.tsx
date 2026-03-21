@@ -287,7 +287,7 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
 
   async function runAiAnalysis() {
     if (!quote || !symbol) return
-    const apiKey = localStorage.getItem('openrouter_api_key') || ''
+    const apiKey = localStorage.getItem('openrouter_api_key') || import.meta.env.VITE_OPENROUTER_API_KEY || ''
     if (!apiKey) {
       setAiError('No API key configured. Go to CONFIG and add your OpenRouter API key (free at openrouter.ai)')
       return

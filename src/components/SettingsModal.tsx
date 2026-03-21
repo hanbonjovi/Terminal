@@ -64,11 +64,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             type="password"
             value={openRouterKey}
             onChange={(e) => setOpenRouterKey(e.target.value)}
-            placeholder="Enter your OpenRouter API key"
+            placeholder={import.meta.env.VITE_OPENROUTER_API_KEY ? 'Using key from environment' : 'Enter your OpenRouter API key'}
             className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 focus:outline-none focus:border-purple-600"
           />
           <p className="text-[10px] text-gray-600 mt-1">
-            Get a free key at openrouter.ai — powers the AI analysis tab.
+            {import.meta.env.VITE_OPENROUTER_API_KEY
+              ? 'Key loaded from environment. Override here if needed.'
+              : 'Get a free key at openrouter.ai — powers the AI analysis tab.'}
           </p>
         </div>
 
