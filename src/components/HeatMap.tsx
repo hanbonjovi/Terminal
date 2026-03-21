@@ -2,6 +2,7 @@ import type { StockQuote } from '../types'
 
 interface HeatMapProps {
   quotes: StockQuote[]
+  onAnalyze?: (symbol: string) => void
 }
 
 function getHeatColor(changePercent: number): string {
@@ -33,7 +34,7 @@ function formatMarketCap(value: number): string {
   return value.toLocaleString()
 }
 
-export function HeatMap({ quotes }: HeatMapProps) {
+export function HeatMap({ quotes, onAnalyze }: HeatMapProps) {
   if (quotes.length === 0) return null
 
   // Sort by market cap for sizing (larger = bigger tile)
@@ -51,7 +52,8 @@ export function HeatMap({ quotes }: HeatMapProps) {
           return (
             <div
               key={q.symbol}
-              className={`${getHeatColor(q.regularMarketChangePercent)} rounded-sm p-2 flex flex-col justify-between border border-white/5 transition-all hover:border-white/20 hover:brightness-110 cursor-default`}
+              onClick={() => onAnalyze?.(q.symbol)}
+              className={`${getHeatColor(q.regularMarketChangePercent)} rounded-sm p-2 flex flex-col justify-between border border-white/5 transition-all hover:border-white/20 hover:brightness-110 cursor-pointer`}
               style={{
                 gridColumn: span > 1 ? 'span 2' : 'span 1',
                 minHeight: span > 1 ? '90px' : '70px',

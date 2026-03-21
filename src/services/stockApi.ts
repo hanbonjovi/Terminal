@@ -1,4 +1,4 @@
-import type { StockQuote } from '../types'
+import type { StockQuote, ExtendedQuote } from '../types'
 
 const YAHOO_BASE = 'https://query1.finance.yahoo.com/v7/finance/quote'
 const CORS_PROXIES = [
@@ -112,6 +112,74 @@ async function fetchFromFinnhub(symbols: string[]): Promise<StockQuote[]> {
     })
   )
   return quotes
+}
+
+// Fetch extended quote data for analysis panel
+export async function fetchExtendedQuote(symbol: string): Promise<ExtendedQuote> {
+  const fields = [
+    'regularMarketPrice', 'regularMarketChange', 'regularMarketChangePercent',
+    'marketCap', 'regularMarketVolume', 'regularMarketDayHigh', 'regularMarketDayLow',
+    'regularMarketOpen', 'regularMarketPreviousClose', 'fiftyTwoWeekHigh', 'fiftyTwoWeekLow',
+    'shortName', 'longName', 'fiftyDayAverage', 'twoHundredDayAverage',
+    'fiftyDayAverageChangePercent', 'twoHundredDayAverageChangePercent',
+    'averageDailyVolume3Month', 'averageDailyVolume10Day',
+    'trailingPE', 'forwardPE', 'epsTrailingTwelveMonths', 'epsForward',
+    'bookValue', 'priceToBook', 'trailingAnnualDividendYield', 'beta',
+    'sharesOutstanding', 'shortPercentOfFloat', 'heldPercentInstitutions',
+    'exchange', 'quoteType', 'currency',
+  ].join(',')
+
+  const rawUrl = `${YAHOO_BASE}?symbols=${encodeURIComponent(symbol)}&fields=${fields}`
+
+  for (const makeProxy of CORS_PROXIES) {
+    try {
+      const url = makeProxy(rawUrl)
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const data = await res.json()
+      const q = data?.quoteResponse?.result?.[0]
+      if (!q) continue
+
+      return {
+        symbol: q.symbol ?? symbol,
+        shortName: q.shortName || q.longName || symbol,
+        regularMarketPrice: q.regularMarketPrice ?? 0,
+        regularMarketChange: q.regularMarketChange ?? 0,
+        regularMarketChangePercent: q.regularMarketChangePercent ?? 0,
+        marketCap: q.marketCap ?? 0,
+        regularMarketVolume: q.regularMarketVolume ?? 0,
+        regularMarketDayHigh: q.regularMarketDayHigh ?? 0,
+        regularMarketDayLow: q.regularMarketDayLow ?? 0,
+        regularMarketOpen: q.regularMarketOpen ?? 0,
+        regularMarketPreviousClose: q.regularMarketPreviousClose ?? 0,
+        fiftyTwoWeekHigh: q.fiftyTwoWeekHigh ?? 0,
+        fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? 0,
+        fiftyDayAverage: q.fiftyDayAverage ?? 0,
+        twoHundredDayAverage: q.twoHundredDayAverage ?? 0,
+        fiftyDayAverageChangePercent: q.fiftyDayAverageChangePercent ?? 0,
+        twoHundredDayAverageChangePercent: q.twoHundredDayAverageChangePercent ?? 0,
+        averageDailyVolume3Month: q.averageDailyVolume3Month ?? 0,
+        averageDailyVolume10Day: q.averageDailyVolume10Day ?? 0,
+        trailingPE: q.trailingPE ?? 0,
+        forwardPE: q.forwardPE ?? 0,
+        epsTrailingTwelveMonths: q.epsTrailingTwelveMonths ?? 0,
+        epsForward: q.epsForward ?? 0,
+        bookValue: q.bookValue ?? 0,
+        priceToBook: q.priceToBook ?? 0,
+        trailingAnnualDividendYield: q.trailingAnnualDividendYield ?? 0,
+        beta: q.beta ?? 0,
+        sharesOutstanding: q.sharesOutstanding ?? 0,
+        shortPercentOfFloat: q.shortPercentOfFloat ?? 0,
+        heldPercentInstitutions: q.heldPercentInstitutions ?? 0,
+        exchange: q.exchange ?? '',
+        quoteType: q.quoteType ?? '',
+        currency: q.currency ?? 'USD',
+      }
+    } catch {
+      continue
+    }
+  }
+  throw new Error(`Failed to fetch analysis data for ${symbol}`)
 }
 
 export async function fetchQuotes(symbols: string[]): Promise<StockQuote[]> {

@@ -8,12 +8,15 @@ import { CategoryToggle } from './components/CategoryToggle'
 import { SectorSummary } from './components/SectorSummary'
 import { StockTable } from './components/StockTable'
 import { HeatMap } from './components/HeatMap'
+import { StockAnalysis } from './components/StockAnalysis'
 import { SettingsModal } from './components/SettingsModal'
 
 function App() {
   const [activeCategoryId, setActiveCategoryId] = useState(categories[0].id)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'table' | 'heatmap'>('table')
+  const [analysisOpen, setAnalysisOpen] = useState(false)
+  const [analysisSymbol, setAnalysisSymbol] = useState<string | undefined>()
 
   const activeCategory = useMemo(
     () => categories.find((c) => c.id === activeCategoryId) ?? categories[0],
@@ -25,10 +28,21 @@ function App() {
     activeCategory.tickers
   )
 
-  // Keyboard shortcuts: 1-9,0 for categories
+  // Open analysis for a specific symbol (from table row click)
+  function openAnalysis(symbol?: string) {
+    setAnalysisSymbol(symbol)
+    setAnalysisOpen(true)
+  }
+
+  // Keyboard shortcuts
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement) return
+      // Escape closes analysis modal
+      if (e.key === 'Escape' && analysisOpen) {
+        setAnalysisOpen(false)
+        return
+      }
       const num = parseInt(e.key)
       if (!isNaN(num)) {
         const idx = num === 0 ? 9 : num - 1
@@ -38,10 +52,11 @@ function App() {
       }
       if (e.key === 'r' || e.key === 'R') refresh()
       if (e.key === 'v' || e.key === 'V') setViewMode(m => m === 'table' ? 'heatmap' : 'table')
+      if (e.key === 'a' || e.key === 'A') openAnalysis()
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [refresh])
+  }, [refresh, analysisOpen])
 
   return (
     <div className="h-screen flex flex-col bg-[#030711] text-gray-100">
@@ -56,6 +71,7 @@ function App() {
         loading={loading}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        onAnalyze={() => openAnalysis()}
       />
 
       {/* Category selector */}
@@ -78,9 +94,10 @@ function App() {
           loading={loading}
           error={error}
           onRetry={refresh}
+          onAnalyze={openAnalysis}
         />
       ) : (
-        <HeatMap quotes={quotes} />
+        <HeatMap quotes={quotes} onAnalyze={openAnalysis} />
       )}
 
       {/* Footer */}
@@ -94,7 +111,7 @@ function App() {
             Yahoo Finance / Finnhub
           </span>
           <span className="hidden md:inline text-gray-700">
-            Keys: 1-0 sectors · R refresh · V view
+            Keys: 1-0 sectors · R refresh · V view · A analyze
           </span>
         </div>
         <button
@@ -105,6 +122,11 @@ function App() {
         </button>
       </footer>
 
+      <StockAnalysis
+        isOpen={analysisOpen}
+        onClose={() => setAnalysisOpen(false)}
+        initialSymbol={analysisSymbol}
+      />
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )

@@ -6,6 +6,7 @@ interface StockTableProps {
   loading: boolean
   error: string | null
   onRetry: () => void
+  onAnalyze?: (symbol: string) => void
 }
 
 function formatPrice(value: number): string {
@@ -80,7 +81,7 @@ const columns: { key: SortField; label: string; align: 'left' | 'right'; hideOnM
   { key: 'regularMarketVolume', label: 'VOL', align: 'right', hideOnMobile: true },
 ]
 
-export function StockTable({ quotes, loading, error, onRetry }: StockTableProps) {
+export function StockTable({ quotes, loading, error, onRetry, onAnalyze }: StockTableProps) {
   const [sortField, setSortField] = useState<SortField>('regularMarketChangePercent')
   const [sortDir, setSortDir] = useState<SortDirection>('desc')
 
@@ -174,7 +175,7 @@ export function StockTable({ quotes, loading, error, onRetry }: StockTableProps)
         </thead>
         <tbody>
           {sorted.map((quote, idx) => (
-            <StockRow key={quote.symbol} quote={quote} rank={idx + 1} />
+            <StockRow key={quote.symbol} quote={quote} rank={idx + 1} onAnalyze={onAnalyze} />
           ))}
         </tbody>
       </table>
@@ -182,7 +183,7 @@ export function StockTable({ quotes, loading, error, onRetry }: StockTableProps)
   )
 }
 
-function StockRow({ quote, rank }: { quote: StockQuote; rank: number }) {
+function StockRow({ quote, rank, onAnalyze }: { quote: StockQuote; rank: number; onAnalyze?: (symbol: string) => void }) {
   const isPositive = quote.regularMarketChange >= 0
   const changeColor = isPositive ? 'text-green-400' : 'text-red-400'
   const rowBg = rank % 2 === 0 ? 'bg-gray-900/20' : ''
@@ -202,7 +203,11 @@ function StockRow({ quote, rank }: { quote: StockQuote; rank: number }) {
       : 50
 
   return (
-    <tr className={`border-b border-gray-800/30 ${rowBg} hover:bg-amber-500/5 transition-colors group`}>
+    <tr
+      className={`border-b border-gray-800/30 ${rowBg} hover:bg-amber-500/5 transition-colors group cursor-pointer`}
+      onDoubleClick={() => onAnalyze?.(quote.symbol)}
+      title="Double-click to analyze"
+    >
       <td className="px-2 py-1.5 text-[10px] text-gray-700 tabular-nums">{rank}</td>
       <td className="px-2 py-1.5">
         <div className="flex items-center gap-1.5">

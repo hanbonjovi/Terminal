@@ -14,6 +14,30 @@ export interface StockQuote {
   fiftyTwoWeekLow: number
 }
 
+// Extended quote data for stock analysis panel
+export interface ExtendedQuote extends StockQuote {
+  fiftyDayAverage: number
+  twoHundredDayAverage: number
+  fiftyDayAverageChangePercent: number
+  twoHundredDayAverageChangePercent: number
+  averageDailyVolume3Month: number
+  averageDailyVolume10Day: number
+  trailingPE: number
+  forwardPE: number
+  epsTrailingTwelveMonths: number
+  epsForward: number
+  bookValue: number
+  priceToBook: number
+  trailingAnnualDividendYield: number
+  beta: number
+  sharesOutstanding: number
+  shortPercentOfFloat: number
+  heldPercentInstitutions: number
+  exchange: string
+  quoteType: string
+  currency: string
+}
+
 export type SortField = keyof Pick<
   StockQuote,
   | 'symbol'

@@ -7,6 +7,7 @@ interface HeaderProps {
   loading: boolean
   viewMode: 'table' | 'heatmap'
   onViewModeChange: (mode: 'table' | 'heatmap') => void
+  onAnalyze: () => void
 }
 
 function getMarketStatus(): { status: string; color: string; label: string } {
@@ -66,6 +67,7 @@ export function Header({
   loading,
   viewMode,
   onViewModeChange,
+  onAnalyze,
 }: HeaderProps) {
   const market = getMarketStatus()
 
@@ -94,6 +96,14 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-2 text-[10px]">
+          {/* Analyze button */}
+          <button
+            onClick={onAnalyze}
+            className="px-2.5 py-1 bg-cyan-900/30 border border-cyan-700/50 rounded text-[10px] text-cyan-400 hover:bg-cyan-800/40 hover:border-cyan-600 transition-colors font-bold"
+          >
+            ANALYZE
+          </button>
+
           {/* View mode toggle */}
           <div className="flex border border-gray-700 rounded overflow-hidden">
             <button
