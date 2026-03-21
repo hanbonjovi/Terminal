@@ -55,10 +55,18 @@ Respond in EXACTLY this JSON format (no markdown, no code blocks, just raw JSON)
 }`
 }
 
+export type AiModel = 'qwen/qwen3-8b' | 'deepseek/deepseek-chat-v3-0324'
+
+export const AI_MODELS: { id: AiModel; name: string; provider: string }[] = [
+  { id: 'qwen/qwen3-8b', name: 'Qwen 3 8B', provider: 'Alibaba' },
+  { id: 'deepseek/deepseek-chat-v3-0324', name: 'DeepSeek V3', provider: 'DeepSeek' },
+]
+
 export async function fetchAiAnalysis(
   symbol: string,
   quote: ExtendedQuote,
-  apiKey: string
+  apiKey: string,
+  model: AiModel = 'qwen/qwen3-8b'
 ): Promise<AiAnalysisResult> {
   const prompt = buildPrompt(symbol, quote)
 
@@ -69,7 +77,7 @@ export async function fetchAiAnalysis(
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'qwen/qwen3-8b',
+      model,
       messages: [
         { role: 'user', content: prompt },
       ],

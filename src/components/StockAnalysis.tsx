@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import type { ExtendedQuote } from '../types'
 import { fetchExtendedQuote } from '../services/stockApi'
-import { fetchAiAnalysis } from '../services/aiAnalysis'
+import { fetchAiAnalysis, AI_MODELS } from '../services/aiAnalysis'
+import type { AiModel } from '../services/aiAnalysis'
 
 type AnalysisMode = 'algo' | 'ai'
 
@@ -275,6 +276,15 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
     }
   }
 
+  function getSelectedModel(): AiModel {
+    return (localStorage.getItem('ai_model') as AiModel) || 'qwen/qwen3-8b'
+  }
+
+  function getSelectedModelName(): string {
+    const modelId = getSelectedModel()
+    return AI_MODELS.find(m => m.id === modelId)?.name || 'Qwen 3'
+  }
+
   async function runAiAnalysis() {
     if (!quote || !symbol) return
     const apiKey = localStorage.getItem('openrouter_api_key') || ''
@@ -285,7 +295,7 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
     setAiLoading(true)
     setAiError(null)
     try {
-      const result = await fetchAiAnalysis(symbol, quote, apiKey)
+      const result = await fetchAiAnalysis(symbol, quote, apiKey, getSelectedModel())
       setAiResult(result)
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'AI analysis failed')
@@ -363,10 +373,10 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
               }`}
             >
               AI
-              <span className="text-[8px] opacity-60">QWEN</span>
+              <span className="text-[8px] opacity-60">{getSelectedModelName().toUpperCase()}</span>
             </button>
             <span className="ml-auto text-gray-600 text-[9px]">
-              {mode === 'algo' ? 'Algorithmic technical analysis' : 'AI-powered analysis via Qwen'}
+              {mode === 'algo' ? 'Algorithmic technical analysis' : `AI-powered analysis via ${getSelectedModelName()}`}
             </span>
           </div>
         )}
@@ -394,7 +404,7 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
             {aiLoading && (
               <div className="p-8 text-center">
                 <div className="text-purple-400 text-xs animate-pulse font-mono">
-                  <span className="cursor-blink">█</span> QWEN ANALYZING {symbol}...
+                  <span className="cursor-blink">█</span> {getSelectedModelName().toUpperCase()} ANALYZING {symbol}...
                 </div>
                 <div className="text-gray-600 text-[10px] mt-2">Generating AI-powered analysis</div>
               </div>
@@ -419,7 +429,7 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-purple-400 text-[10px] tracking-wider">AI SIGNAL</span>
-                      <span className="text-gray-700 text-[9px]">Qwen 3</span>
+                      <span className="text-gray-700 text-[9px]">{getSelectedModelName()}</span>
                     </div>
                     <div className="text-gray-500 text-[10px]">
                       {symbol} · {timestamp}
@@ -472,7 +482,7 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
 
                 {/* Disclaimer */}
                 <div className="text-[9px] text-gray-700 text-center px-4 py-2">
-                  AI analysis powered by Qwen via OpenRouter. Not financial advice.
+                  AI analysis powered by {getSelectedModelName()} via OpenRouter. Not financial advice.
                   AI can make mistakes — always verify with your own research.
                 </div>
               </>

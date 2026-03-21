@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { AI_MODELS } from '../services/aiAnalysis'
+import type { AiModel } from '../services/aiAnalysis'
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -11,6 +13,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   )
   const [openRouterKey, setOpenRouterKey] = useState(
     () => localStorage.getItem('openrouter_api_key') || ''
+  )
+  const [aiModel, setAiModel] = useState<AiModel>(
+    () => (localStorage.getItem('ai_model') as AiModel) || 'qwen/qwen3-8b'
   )
 
   if (!isOpen) return null
@@ -26,6 +31,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     } else {
       localStorage.removeItem('openrouter_api_key')
     }
+    localStorage.setItem('ai_model', aiModel)
     onClose()
   }
 
@@ -62,8 +68,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 focus:outline-none focus:border-purple-600"
           />
           <p className="text-[10px] text-gray-600 mt-1">
-            Get a free key at openrouter.ai — powers the AI analysis tab using Qwen model.
+            Get a free key at openrouter.ai — powers the AI analysis tab.
           </p>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-xs text-purple-400 mb-1">
+            AI Model
+          </label>
+          <div className="flex gap-2">
+            {AI_MODELS.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setAiModel(m.id)}
+                className={`flex-1 px-3 py-2 rounded text-xs font-bold transition-all ${
+                  aiModel === m.id
+                    ? 'bg-purple-500/15 border border-purple-500/50 text-purple-300'
+                    : 'bg-gray-800 border border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'
+                }`}
+              >
+                <div>{m.name}</div>
+                <div className="text-[9px] font-normal opacity-60 mt-0.5">{m.provider}</div>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-end gap-2">
