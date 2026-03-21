@@ -1,5 +1,5 @@
 {
-  "name": "stock-terminal-ai",
+  "name": "stonks",
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
