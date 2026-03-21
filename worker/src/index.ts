@@ -1,7 +1,6 @@
 interface Env {
   OPENROUTER_API_KEY: string
   ALLOWED_ORIGIN: string
-  ASSETS: Fetcher
 }
 
 const CORS_HEADERS = {
@@ -11,16 +10,10 @@ const CORS_HEADERS = {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url)
     const origin = request.headers.get('Origin') || ''
     const allowedOrigins = [env.ALLOWED_ORIGIN, 'http://localhost:5173', 'http://localhost:4173']
     const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
     const headers = { ...CORS_HEADERS, 'Access-Control-Allow-Origin': corsOrigin }
-
-    // Serve static assets for non-API requests
-    if (url.pathname !== '/api') {
-      return env.ASSETS.fetch(request)
-    }
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers })
