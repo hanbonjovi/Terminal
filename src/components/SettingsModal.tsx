@@ -9,6 +9,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [apiKey, setApiKey] = useState(
     () => localStorage.getItem('finnhub_api_key') || ''
   )
+  const [openRouterKey, setOpenRouterKey] = useState(
+    () => localStorage.getItem('openrouter_api_key') || ''
+  )
 
   if (!isOpen) return null
 
@@ -17,6 +20,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       localStorage.setItem('finnhub_api_key', apiKey.trim())
     } else {
       localStorage.removeItem('finnhub_api_key')
+    }
+    if (openRouterKey.trim()) {
+      localStorage.setItem('openrouter_api_key', openRouterKey.trim())
+    } else {
+      localStorage.removeItem('openrouter_api_key')
     }
     onClose()
   }
@@ -39,6 +47,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           />
           <p className="text-[10px] text-gray-600 mt-1">
             Get a free key at finnhub.io — used as fallback when Yahoo Finance is unavailable.
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-xs text-purple-400 mb-1">
+            OpenRouter API Key (for AI Analysis)
+          </label>
+          <input
+            type="password"
+            value={openRouterKey}
+            onChange={(e) => setOpenRouterKey(e.target.value)}
+            placeholder="Enter your OpenRouter API key"
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 focus:outline-none focus:border-purple-600"
+          />
+          <p className="text-[10px] text-gray-600 mt-1">
+            Get a free key at openrouter.ai — powers the AI analysis tab using Qwen model.
           </p>
         </div>
 

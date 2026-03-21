@@ -1,6 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import type { ExtendedQuote } from '../types'
 import { fetchExtendedQuote } from '../services/stockApi'
+import { fetchAiAnalysis } from '../services/aiAnalysis'
+
+type AnalysisMode = 'algo' | 'ai'
+
+interface AiResult {
+  signal: string
+  summary: string
+  reasoning: string
+  risks: string
+  outlook: string
+}
 
 interface StockAnalysisProps {
   isOpen: boolean
@@ -216,6 +227,10 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [timestamp, setTimestamp] = useState<string>('')
+  const [mode, setMode] = useState<AnalysisMode>('algo')
+  const [aiResult, setAiResult] = useState<AiResult | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -238,6 +253,8 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
     setSymbol(ticker)
     setLoading(true)
     setError(null)
+    setAiResult(null)
+    setAiError(null)
 
     try {
       const data = await fetchExtendedQuote(ticker)
@@ -258,8 +275,36 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
     }
   }
 
+  async function runAiAnalysis() {
+    if (!quote || !symbol) return
+    const apiKey = localStorage.getItem('openrouter_api_key') || ''
+    if (!apiKey) {
+      setAiError('No API key configured. Go to CONFIG and add your OpenRouter API key (free at openrouter.ai)')
+      return
+    }
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const result = await fetchAiAnalysis(symbol, quote, apiKey)
+      setAiResult(result)
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'AI analysis failed')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  // Auto-run AI analysis when switching to AI mode with data loaded
+  useEffect(() => {
+    if (mode === 'ai' && quote && !aiResult && !aiLoading && !aiError) {
+      runAiAnalysis()
+    }
+  }, [mode, quote])
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setAiResult(null)
+    setAiError(null)
     runAnalysis(searchInput)
   }
 
@@ -296,6 +341,36 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
           </button>
         </div>
 
+        {/* Mode toggle */}
+        {quote && !loading && (
+          <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-800 bg-[#060a12]">
+            <button
+              onClick={() => setMode('algo')}
+              className={`px-3 py-1 rounded-sm text-[10px] font-bold tracking-wider transition-all ${
+                mode === 'algo'
+                  ? 'text-amber-400 bg-amber-500/10 border border-amber-500/40'
+                  : 'text-gray-500 border border-transparent hover:text-gray-300 hover:border-gray-700'
+              }`}
+            >
+              ALGO
+            </button>
+            <button
+              onClick={() => setMode('ai')}
+              className={`px-3 py-1 rounded-sm text-[10px] font-bold tracking-wider transition-all flex items-center gap-1.5 ${
+                mode === 'ai'
+                  ? 'text-purple-400 bg-purple-500/10 border border-purple-500/40'
+                  : 'text-gray-500 border border-transparent hover:text-gray-300 hover:border-gray-700'
+              }`}
+            >
+              AI
+              <span className="text-[8px] opacity-60">QWEN</span>
+            </button>
+            <span className="ml-auto text-gray-600 text-[9px]">
+              {mode === 'algo' ? 'Algorithmic technical analysis' : 'AI-powered analysis via Qwen'}
+            </span>
+          </div>
+        )}
+
         {/* Loading */}
         {loading && (
           <div className="p-8 text-center">
@@ -313,8 +388,100 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
           </div>
         )}
 
-        {/* Results */}
-        {!loading && quote && analysis && (
+        {/* AI Results */}
+        {!loading && quote && mode === 'ai' && (
+          <div className="p-4 space-y-3 text-xs font-mono max-h-[80vh] overflow-auto">
+            {aiLoading && (
+              <div className="p-8 text-center">
+                <div className="text-purple-400 text-xs animate-pulse font-mono">
+                  <span className="cursor-blink">█</span> QWEN ANALYZING {symbol}...
+                </div>
+                <div className="text-gray-600 text-[10px] mt-2">Generating AI-powered analysis</div>
+              </div>
+            )}
+
+            {aiError && (
+              <div className="border border-red-700/30 rounded bg-red-900/10 p-4">
+                <div className="text-red-400 text-xs font-mono mb-2">AI ERROR: {aiError}</div>
+                <button
+                  onClick={runAiAnalysis}
+                  className="px-3 py-1 text-[10px] border border-gray-700 rounded text-gray-400 hover:text-amber-400 hover:border-amber-700 transition-colors"
+                >
+                  RETRY
+                </button>
+              </div>
+            )}
+
+            {aiResult && (
+              <>
+                {/* AI Signal */}
+                <div className="border border-gray-700/50 rounded bg-gray-900/50 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-400 text-[10px] tracking-wider">AI SIGNAL</span>
+                      <span className="text-gray-700 text-[9px]">Qwen 3</span>
+                    </div>
+                    <div className="text-gray-500 text-[10px]">
+                      {symbol} · {timestamp}
+                    </div>
+                  </div>
+
+                  <div className={`text-2xl font-black mb-2 ${
+                    aiResult.signal === 'BUY' ? 'text-green-400' :
+                    aiResult.signal === 'SELL' ? 'text-red-400' :
+                    aiResult.signal === 'HOLD' ? 'text-amber-400' :
+                    'text-cyan-400'
+                  }`}>
+                    {aiResult.signal}
+                  </div>
+
+                  <p className="text-gray-300 text-[11px] leading-relaxed">
+                    {aiResult.summary}
+                  </p>
+                </div>
+
+                {/* AI Reasoning */}
+                {aiResult.reasoning && (
+                  <div className="border border-gray-700/50 rounded bg-gray-900/50 p-3">
+                    <div className="text-gray-400 text-[10px] mb-2 tracking-wider">REASONING</div>
+                    <div className="text-gray-300 text-[11px] leading-relaxed whitespace-pre-line">
+                      {aiResult.reasoning}
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Risks */}
+                {aiResult.risks && (
+                  <div className="border border-red-700/20 rounded bg-red-900/5 p-3">
+                    <div className="text-red-400/80 text-[10px] mb-2 tracking-wider">RISKS</div>
+                    <div className="text-gray-400 text-[11px] leading-relaxed whitespace-pre-line">
+                      {aiResult.risks}
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Outlook */}
+                {aiResult.outlook && (
+                  <div className="border border-gray-700/50 rounded bg-gray-900/50 p-3">
+                    <div className="text-cyan-400/80 text-[10px] mb-2 tracking-wider">NEAR-TERM OUTLOOK</div>
+                    <p className="text-gray-300 text-[11px] leading-relaxed">
+                      {aiResult.outlook}
+                    </p>
+                  </div>
+                )}
+
+                {/* Disclaimer */}
+                <div className="text-[9px] text-gray-700 text-center px-4 py-2">
+                  AI analysis powered by Qwen via OpenRouter. Not financial advice.
+                  AI can make mistakes — always verify with your own research.
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Algo Results */}
+        {!loading && quote && analysis && mode === 'algo' && (
           <div className="p-4 space-y-3 text-xs font-mono max-h-[80vh] overflow-auto">
             {/* ── Action Signal ── */}
             <div className="border border-gray-700/50 rounded bg-gray-900/50 p-3">
