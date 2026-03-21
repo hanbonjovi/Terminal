@@ -1,6 +1,7 @@
 interface Env {
   OPENROUTER_API_KEY: string
   ALLOWED_ORIGIN: string
+  ASSETS: Fetcher
 }
 
 const CORS_HEADERS = {
@@ -10,10 +11,16 @@ const CORS_HEADERS = {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url)
     const origin = request.headers.get('Origin') || ''
     const allowedOrigins = [env.ALLOWED_ORIGIN, 'http://localhost:5173', 'http://localhost:4173']
     const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
     const headers = { ...CORS_HEADERS, 'Access-Control-Allow-Origin': corsOrigin }
+
+    // Serve static assets for non-API requests
+    if (url.pathname !== '/api') {
+      return env.ASSETS.fetch(request)
+    }
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers })
@@ -26,18 +33,15 @@ export default {
     try {
       const body = await request.json() as { model?: string; messages?: unknown[] }
 
-      // Validate request
       if (!body.model || !body.messages) {
         return Response.json({ error: 'Missing model or messages' }, { status: 400, headers })
       }
 
-      // Only allow specific models
       const allowedModels = ['qwen/qwen3-8b', 'deepseek/deepseek-chat-v3-0324']
       if (!allowedModels.includes(body.model)) {
         return Response.json({ error: 'Model not allowed' }, { status: 403, headers })
       }
 
-      // Proxy to OpenRouter
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
