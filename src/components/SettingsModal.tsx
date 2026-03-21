@@ -56,23 +56,23 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </p>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-xs text-purple-400 mb-1">
-            OpenRouter API Key (for AI Analysis)
-          </label>
-          <input
-            type="password"
-            value={openRouterKey}
-            onChange={(e) => setOpenRouterKey(e.target.value)}
-            placeholder={import.meta.env.VITE_OPENROUTER_API_KEY ? 'Using key from environment' : 'Enter your OpenRouter API key'}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 focus:outline-none focus:border-purple-600"
-          />
-          <p className="text-[10px] text-gray-600 mt-1">
-            {import.meta.env.VITE_OPENROUTER_API_KEY
-              ? 'Key loaded from environment. Override here if needed.'
-              : 'Get a free key at openrouter.ai — powers the AI analysis tab.'}
-          </p>
-        </div>
+        {!import.meta.env.VITE_AI_PROXY_URL && (
+          <div className="mb-4">
+            <label className="block text-xs text-purple-400 mb-1">
+              OpenRouter API Key (for AI Analysis)
+            </label>
+            <input
+              type="password"
+              value={openRouterKey}
+              onChange={(e) => setOpenRouterKey(e.target.value)}
+              placeholder="Enter your OpenRouter API key"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 focus:outline-none focus:border-purple-600"
+            />
+            <p className="text-[10px] text-gray-600 mt-1">
+              Get a free key at openrouter.ai — powers the AI analysis tab.
+            </p>
+          </div>
+        )}
 
         <div className="mb-4">
           <label className="block text-xs text-purple-400 mb-1">

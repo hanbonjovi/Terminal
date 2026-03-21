@@ -62,27 +62,38 @@ export const AI_MODELS: { id: AiModel; name: string; provider: string }[] = [
   { id: 'deepseek/deepseek-chat-v3-0324', name: 'DeepSeek V3', provider: 'DeepSeek' },
 ]
 
+// Worker proxy URL — set via VITE_AI_PROXY_URL env var, or falls back to direct OpenRouter
+const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL || ''
+
 export async function fetchAiAnalysis(
   symbol: string,
   quote: ExtendedQuote,
-  apiKey: string,
   model: AiModel = 'qwen/qwen3-8b'
 ): Promise<AiAnalysisResult> {
   const prompt = buildPrompt(symbol, quote)
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const useProxy = !!AI_PROXY_URL
+  const url = useProxy ? AI_PROXY_URL : 'https://openrouter.ai/api/v1/chat/completions'
+
+  // If no proxy, require a user-provided API key
+  const apiKey = useProxy ? '' : (localStorage.getItem('openrouter_api_key') || '')
+  if (!useProxy && !apiKey) {
+    throw new Error('No API key configured. Go to CONFIG and add your OpenRouter API key (free at openrouter.ai)')
+  }
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (!useProxy) {
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
       model,
       messages: [
         { role: 'user', content: prompt },
       ],
-      temperature: 0.3,
-      max_tokens: 800,
     }),
   })
 
