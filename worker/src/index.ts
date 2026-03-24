@@ -48,28 +48,67 @@ async function handleAi(request: Request, env: Env, headers: Record<string, stri
   })
 }
 
+async function fetchChartQuote(symbol: string): Promise<Record<string, unknown> | null> {
+  const yahooUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d&includePrePost=false`
+  const response = await fetch(yahooUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    },
+  })
+  if (!response.ok) return null
+  const data = await response.json() as { chart?: { result?: Array<{ meta?: Record<string, unknown>, indicators?: { quote?: Array<{ volume?: number[] }> } }> } }
+  const result = data?.chart?.result?.[0]
+  if (!result?.meta) return null
+  const meta = result.meta as Record<string, unknown>
+  const previousClose = (meta.chartPreviousClose ?? meta.previousClose ?? 0) as number
+  const price = (meta.regularMarketPrice ?? 0) as number
+  const change = price - previousClose
+  const changePercent = previousClose ? (change / previousClose) * 100 : 0
+  const volumes = result.indicators?.quote?.[0]?.volume
+  const lastVolume = volumes?.length ? volumes[volumes.length - 1] ?? 0 : 0
+
+  return {
+    symbol: (meta.symbol as string) || symbol,
+    shortName: (meta.shortName as string) || (meta.longName as string) || symbol,
+    longName: (meta.longName as string) || '',
+    regularMarketPrice: price,
+    regularMarketChange: change,
+    regularMarketChangePercent: changePercent,
+    regularMarketVolume: lastVolume,
+    regularMarketDayHigh: (meta.regularMarketDayHigh ?? 0) as number,
+    regularMarketDayLow: (meta.regularMarketDayLow ?? 0) as number,
+    regularMarketOpen: (meta.regularMarketOpen ?? 0) as number,
+    regularMarketPreviousClose: previousClose,
+    fiftyTwoWeekHigh: (meta.fiftyTwoWeekHigh ?? 0) as number,
+    fiftyTwoWeekLow: (meta.fiftyTwoWeekLow ?? 0) as number,
+    fiftyDayAverage: (meta.fiftyDayAverage ?? 0) as number,
+    twoHundredDayAverage: (meta.twoHundredDayAverage ?? 0) as number,
+    fiftyDayAverageChangePercent: (meta.fiftyDayAverageChangePercent ?? 0) as number,
+    twoHundredDayAverageChangePercent: (meta.twoHundredDayAverageChangePercent ?? 0) as number,
+    marketCap: (meta.marketCap ?? 0) as number,
+    exchange: (meta.exchangeName ?? meta.exchange ?? '') as string,
+    quoteType: (meta.instrumentType ?? meta.quoteType ?? '') as string,
+    currency: (meta.currency ?? 'USD') as string,
+  }
+}
+
 async function handleQuote(request: Request, headers: Record<string, string>): Promise<Response> {
   const url = new URL(request.url)
   const symbols = url.searchParams.get('symbols')
-  const fields = url.searchParams.get('fields') || ''
 
   if (!symbols) {
     return Response.json({ error: 'Missing symbols parameter' }, { status: 400, headers })
   }
 
-  const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}${fields ? `&fields=${encodeURIComponent(fields)}` : ''}`
+  const symbolList = symbols.split(',').map(s => s.trim()).filter(Boolean)
+  const results = await Promise.all(symbolList.map(s => fetchChartQuote(s)))
+  const validResults = results.filter(r => r !== null)
 
-  const response = await fetch(yahooUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    },
-  })
-
-  const data = await response.text()
-  return new Response(data, {
-    status: response.status,
-    headers: { ...headers, 'Content-Type': 'application/json' },
-  })
+  // Return in the same format as the old v7 API so the frontend doesn't need changes
+  return Response.json(
+    { quoteResponse: { result: validResults, error: null } },
+    { headers: { ...headers, 'Content-Type': 'application/json' } }
+  )
 }
 
 export default {
