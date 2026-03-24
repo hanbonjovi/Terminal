@@ -1,5 +1,5 @@
 interface Env {
-  OPENROUTER_API_KEY: string
+  GEMINI_API_KEY: string
   ALLOWED_ORIGIN: string
 }
 
@@ -16,25 +16,27 @@ function getCorsHeaders(request: Request, env: Env) {
 }
 
 async function handleAi(request: Request, env: Env, headers: Record<string, string>): Promise<Response> {
-  const body = await request.json() as { model?: string; messages?: unknown[] }
+  const body = await request.json() as { model?: string; messages?: Array<{ role: string; content: string }> }
 
-  if (!body.model || !body.messages) {
-    return Response.json({ error: 'Missing model or messages' }, { status: 400, headers })
+  if (!body.messages?.length) {
+    return Response.json({ error: 'Missing messages' }, { status: 400, headers })
   }
 
-  const allowedModels = ['qwen/qwen3-8b', 'deepseek/deepseek-chat-v3-0324']
-  if (!allowedModels.includes(body.model)) {
+  const model = body.model || 'gemini-2.0-flash'
+  const allowedModels = ['gemini-2.0-flash', 'gemini-2.5-flash']
+  if (!allowedModels.includes(model)) {
     return Response.json({ error: 'Model not allowed' }, { status: 403, headers })
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  // Use Gemini's OpenAI-compatible endpoint
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
+      'Authorization': `Bearer ${env.GEMINI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: body.model,
+      model,
       messages: body.messages,
       temperature: 0.3,
       max_tokens: 800,

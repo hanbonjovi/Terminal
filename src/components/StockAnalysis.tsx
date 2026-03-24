@@ -277,12 +277,12 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
   }
 
   function getSelectedModel(): AiModel {
-    return (localStorage.getItem('ai_model') as AiModel) || 'qwen/qwen3-8b'
+    return (localStorage.getItem('ai_model') as AiModel) || 'gemini-2.0-flash'
   }
 
   function getSelectedModelName(): string {
     const modelId = getSelectedModel()
-    return AI_MODELS.find(m => m.id === modelId)?.name || 'Qwen 3'
+    return AI_MODELS.find(m => m.id === modelId)?.name || 'Gemini 2.0 Flash'
   }
 
   async function runAiAnalysis() {
@@ -477,7 +477,7 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
 
                 {/* Disclaimer */}
                 <div className="text-[9px] text-gray-700 text-center px-4 py-2">
-                  AI analysis powered by {getSelectedModelName()} via OpenRouter. Not financial advice.
+                  AI analysis powered by {getSelectedModelName()} via Google Gemini. Not financial advice.
                   AI can make mistakes — always verify with your own research.
                 </div>
               </>

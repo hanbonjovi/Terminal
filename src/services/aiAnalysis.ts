@@ -55,40 +55,25 @@ Respond in EXACTLY this JSON format (no markdown, no code blocks, just raw JSON)
 }`
 }
 
-export type AiModel = 'qwen/qwen3-8b' | 'deepseek/deepseek-chat-v3-0324'
+export type AiModel = 'gemini-2.0-flash' | 'gemini-2.5-flash'
 
 export const AI_MODELS: { id: AiModel; name: string; provider: string }[] = [
-  { id: 'qwen/qwen3-8b', name: 'Qwen 3 8B', provider: 'Alibaba' },
-  { id: 'deepseek/deepseek-chat-v3-0324', name: 'DeepSeek V3', provider: 'DeepSeek' },
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', provider: 'Google' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google' },
 ]
 
-// Worker proxy URL — set via VITE_AI_PROXY_URL env var, or falls back to direct OpenRouter
 const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL || 'https://stonks.hanbonjovi.workers.dev'
 
 export async function fetchAiAnalysis(
   symbol: string,
   quote: ExtendedQuote,
-  model: AiModel = 'qwen/qwen3-8b'
+  model: AiModel = 'gemini-2.0-flash'
 ): Promise<AiAnalysisResult> {
   const prompt = buildPrompt(symbol, quote)
 
-  const useProxy = !!AI_PROXY_URL
-  const url = useProxy ? AI_PROXY_URL : 'https://openrouter.ai/api/v1/chat/completions'
-
-  // If no proxy, require a user-provided API key
-  const apiKey = useProxy ? '' : (localStorage.getItem('openrouter_api_key') || '')
-  if (!useProxy && !apiKey) {
-    throw new Error('No API key configured. Go to CONFIG and add your OpenRouter API key (free at openrouter.ai)')
-  }
-
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (!useProxy) {
-    headers['Authorization'] = `Bearer ${apiKey}`
-  }
-
-  const response = await fetch(url, {
+  const response = await fetch(AI_PROXY_URL, {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model,
       messages: [
@@ -100,7 +85,7 @@ export async function fetchAiAnalysis(
   if (!response.ok) {
     const errorText = await response.text()
     if (response.status === 401) {
-      throw new Error('Invalid API key. Get a free key at openrouter.ai')
+      throw new Error('AI API error: Invalid API key')
     }
     throw new Error(`AI API error (${response.status}): ${errorText}`)
   }
