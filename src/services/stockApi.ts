@@ -1,7 +1,7 @@
 import type { StockQuote, ExtendedQuote } from '../types'
 
 const YAHOO_BASE = 'https://query1.finance.yahoo.com/v7/finance/quote'
-const WORKER_URL = import.meta.env.VITE_AI_PROXY_URL || ''
+const WORKER_URL = import.meta.env.VITE_AI_PROXY_URL || 'https://stonks.hanbonjovi.workers.dev'
 const CORS_PROXIES = [
   (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,

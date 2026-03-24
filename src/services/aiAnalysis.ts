@@ -63,7 +63,7 @@ export const AI_MODELS: { id: AiModel; name: string; provider: string }[] = [
 ]
 
 // Worker proxy URL — set via VITE_AI_PROXY_URL env var, or falls back to direct OpenRouter
-const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL || ''
+const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL || 'https://stonks.hanbonjovi.workers.dev'
 
 export async function fetchAiAnalysis(
   symbol: string,

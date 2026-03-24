@@ -19,6 +19,8 @@ const INDICES = [
   { symbol: 'BTC-USD', name: 'BTC' },
 ]
 
+const WORKER_URL = 'https://stonks.hanbonjovi.workers.dev'
+
 const CORS_PROXIES = [
   (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -30,8 +32,35 @@ export function MarketIndices() {
   useEffect(() => {
     async function fetchIndices() {
       const symbols = INDICES.map(i => i.symbol).join(',')
-      const rawUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,shortName`
+      const fields = 'regularMarketPrice,regularMarketChange,regularMarketChangePercent,shortName'
 
+      // Try worker first
+      try {
+        const res = await fetch(`${WORKER_URL}/quote?symbols=${encodeURIComponent(symbols)}&fields=${encodeURIComponent(fields)}`)
+        if (res.ok) {
+          const data = await res.json()
+          const results = data?.quoteResponse?.result
+          if (results) {
+            const parsed: IndexData[] = INDICES.map(idx => {
+              const r = results.find((r: { symbol: string }) => r.symbol === idx.symbol)
+              return {
+                symbol: idx.symbol,
+                name: idx.name,
+                price: r?.regularMarketPrice ?? 0,
+                change: r?.regularMarketChange ?? 0,
+                changePercent: r?.regularMarketChangePercent ?? 0,
+              }
+            }).filter(d => d.price > 0)
+            setIndices(parsed)
+            return
+          }
+        }
+      } catch (err) {
+        console.warn('Worker failed for indices, trying CORS proxies:', err)
+      }
+
+      // Fallback to CORS proxies
+      const rawUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&fields=${fields}`
       for (const makeProxy of CORS_PROXIES) {
         try {
           const res = await fetch(makeProxy(rawUrl))
