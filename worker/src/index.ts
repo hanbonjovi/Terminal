@@ -1,5 +1,5 @@
 interface Env {
-  GEMINI_API_KEY: string
+  GROQ_API_KEY: string
   ALLOWED_ORIGIN: string
 }
 
@@ -22,40 +22,29 @@ async function handleAi(request: Request, env: Env, headers: Record<string, stri
     return Response.json({ error: 'Missing messages' }, { status: 400, headers })
   }
 
-  const model = body.model || 'gemini-2.0-flash-lite'
-  const allowedModels = ['gemini-2.0-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-flash']
+  const model = body.model || 'llama-3.1-8b-instant'
+  const allowedModels = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'gemma2-9b-it']
   if (!allowedModels.includes(model)) {
     return Response.json({ error: 'Model not allowed' }, { status: 403, headers })
   }
 
-  // Combine all message content into a single prompt for native Gemini API
-  const userContent = body.messages.map((m: { role: string; content: string }) => m.content).join('\n')
-
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`, {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: userContent }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 800 },
+      model,
+      messages: body.messages,
+      temperature: 0.3,
+      max_tokens: 800,
     }),
   })
 
-  const raw = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>; error?: { message?: string; code?: number } }
-
-  if (!response.ok || raw.error) {
-    return Response.json(
-      { error: raw.error?.message || 'Gemini API error' },
-      { status: response.status, headers }
-    )
-  }
-
-  // Convert native Gemini response to OpenAI-compatible format for the frontend
-  const text = raw.candidates?.[0]?.content?.parts?.[0]?.text || ''
-  const openaiFormat = {
-    choices: [{ message: { role: 'assistant', content: text } }],
-  }
-
-  return Response.json(openaiFormat, {
+  const data = await response.text()
+  return new Response(data, {
+    status: response.status,
     headers: { ...headers, 'Content-Type': 'application/json' },
   })
 }

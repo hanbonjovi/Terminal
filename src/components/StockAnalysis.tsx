@@ -277,12 +277,12 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
   }
 
   function getSelectedModel(): AiModel {
-    return (localStorage.getItem('ai_model') as AiModel) || 'gemini-2.0-flash-lite'
+    return (localStorage.getItem('ai_model') as AiModel) || 'llama-3.1-8b-instant'
   }
 
   function getSelectedModelName(): string {
     const modelId = getSelectedModel()
-    return AI_MODELS.find(m => m.id === modelId)?.name || 'Gemini 2.0 Flash Lite'
+    return AI_MODELS.find(m => m.id === modelId)?.name || 'Llama 3.1 8B'
   }
 
   async function runAiAnalysis() {
@@ -477,7 +477,7 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
 
                 {/* Disclaimer */}
                 <div className="text-[9px] text-gray-700 text-center px-4 py-2">
-                  AI analysis powered by {getSelectedModelName()} via Google Gemini. Not financial advice.
+                  AI analysis powered by {getSelectedModelName()} via Groq. Not financial advice.
                   AI can make mistakes — always verify with your own research.
                 </div>
               </>

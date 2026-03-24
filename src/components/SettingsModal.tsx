@@ -12,7 +12,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     () => localStorage.getItem('finnhub_api_key') || ''
   )
   const [aiModel, setAiModel] = useState<AiModel>(
-    () => (localStorage.getItem('ai_model') as AiModel) || 'gemini-2.0-flash-lite'
+    () => (localStorage.getItem('ai_model') as AiModel) || 'llama-3.1-8b-instant'
   )
 
   if (!isOpen) return null
