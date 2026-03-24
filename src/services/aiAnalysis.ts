@@ -55,11 +55,12 @@ Respond in EXACTLY this JSON format (no markdown, no code blocks, just raw JSON)
 }`
 }
 
-export type AiModel = 'gemini-2.0-flash' | 'gemini-2.5-flash'
+export type AiModel = 'gemini-2.0-flash-lite' | 'gemini-2.0-flash' | 'gemini-1.5-flash'
 
 export const AI_MODELS: { id: AiModel; name: string; provider: string }[] = [
+  { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', provider: 'Google' },
   { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', provider: 'Google' },
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google' },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google' },
 ]
 
 const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL || 'https://stonks.hanbonjovi.workers.dev'
@@ -67,7 +68,7 @@ const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL || 'https://stonks.hanbon
 export async function fetchAiAnalysis(
   symbol: string,
   quote: ExtendedQuote,
-  model: AiModel = 'gemini-2.0-flash'
+  model: AiModel = 'gemini-2.0-flash-lite'
 ): Promise<AiAnalysisResult> {
   const prompt = buildPrompt(symbol, quote)
 

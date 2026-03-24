@@ -277,12 +277,12 @@ export function StockAnalysis({ isOpen, onClose, initialSymbol }: StockAnalysisP
   }
 
   function getSelectedModel(): AiModel {
-    return (localStorage.getItem('ai_model') as AiModel) || 'gemini-2.0-flash'
+    return (localStorage.getItem('ai_model') as AiModel) || 'gemini-2.0-flash-lite'
   }
 
   function getSelectedModelName(): string {
     const modelId = getSelectedModel()
-    return AI_MODELS.find(m => m.id === modelId)?.name || 'Gemini 2.0 Flash'
+    return AI_MODELS.find(m => m.id === modelId)?.name || 'Gemini 2.0 Flash Lite'
   }
 
   async function runAiAnalysis() {
